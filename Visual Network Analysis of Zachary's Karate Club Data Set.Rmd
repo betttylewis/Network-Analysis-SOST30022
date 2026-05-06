@@ -1,0 +1,93 @@
+---
+title: "11008809 - Formative Assessment 1"
+author: "Betty Lewis"
+date: "6th March 2026"
+output: pdf_document
+---
+
+# **Formative Assessment 1 - Network Analysis of Zachary's Karate Club Data set**
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+setwd("C://R_AST")
+getwd()
+library(igraph)
+library(igraphdata)
+library(network)
+library(btergm)
+library(manynet)
+data("karate", package = "igraphdata")
+```
+
+This report uses network analysis to visualise the relationships between actors in Zachary's Karate Club data set. The data was collected throughout three years of ethnographic observation of a university karate club led by instructor John A, who encountered conflict following a dispute with part-time instructor Mr.Hi over lowering lesson prices (Zachary, W.W., 1977, p.453). The group gradually divided into factions behind these leaders, leading to political conflict at meetings where factions would aim to dominate debates. Groups therefore organised meetings privately to restrict the flow of information of these meetings cross-factionally (ibid, p.463). This report visualises the relationships between individuals inter- and intra-factionally in network models, using measures of centrality and group closeness to identify relevant actors within the karate club and their role in the eventual division of the club into two distinct groups.
+
+The network below visualises the individuals within the club and their relationships to each other prior to the split. Each vertex represents an individual, coloured orange for membership of John A's faction and blue for Mr. Hi's. Vertices are sized proportionally to degree - the number of connections an individual has, with John A and Mr.Hi appearing the most connected, consistent with their roles as instructors. Actors 2, 3, and 33 are also highly connected. Vertices are connected by edges where a relationship between two individuals exists - the thickness of these proportional to the strength of the friendship between individuals (edge weight), measured by the number of interactions between a pair outside of regular lessons across eight activities. A triangle between actors 2, 3, and 14 indicates a close friendship group, with actor 3 appearing closest to Mr Hi among students and actor 33 with John A. While a part of John A's faction, actor 9 has a close friendship with actor 3, who appears an influential figure in the opposing faction.
+
+```{r, fig.width=12, fig.height=12}
+is_directed(karate)
+is_weighted(karate)
+adj <- as.matrix(as_adjacency_matrix(karate))
+deg <- igraph::degree(karate)
+set.seed(11)
+network <- plot(karate, layout = layout_with_fr(karate), vertex.size = deg / 2, vertex.label = V(karate)$name, edge.width = E(karate)$weight / 1.5)
+```
+
+Centrality metrics confirm these patterns numerically - Mr.Hi, John A, and actors 2, 3, and 33 return the highest degrees. Closeness centrality measures how quickly a vertex can reach every other node in the network, the same actors scoring highly along with actor 9; these individuals are able to spread the news of a meeting across factions, quickly passing political information across the network. Eigenvector centrality measures a vertex's network influence given the influence of its neighbours, this also high for actor 9, explained by their relatively high degree of 10 and observed relationship with influential actor 3 and John A. Betweenness centrality is particularly interesting here for its indication of vertices that bridge geodesic paths - this is high for instructors and actors 2, 3, and 33, but is also notable for actor 20, suggesting a role in connecting factions.
+
+```{r}
+igraph::degree(karate)
+sna::betweenness(adj)
+sna::closeness(adj)
+sna::evcent(adj)
+```
+
+Shared partner analysis allows for further investigation of the makeup of the social group. Seventy dyads share one mutual friend, with none sharing more than ten, while no non-edgewise partners share more than 6 mutual friends, suggesting relatively small groupings within the network. This is supported by a low transitivity score of 0.256 and edge density of 0.139. In this network, it cannot be concluded that 'the friends of my friends are my friends', this reflecting both factional divides and cross-factional friendship during periods of low political conflict (Zachary, W.W., 1977, p.454). The network diameter is 5, this very high given group size and six degrees of separation connecting individuals globally (Milgram, S., 1977). Mr. Hi and John A return a surprisingly low geodesic distance of just 2 - despite factions it is very easy for information to flow from the source to the sink, this through the bridge of actor 20, which explains the individual's high betweenness centrality score. This is where ethnographic observation fails and network analysis is useful - observationally the instructors appear most divided of anyone, yet data collection exposes hidden links through individuals which act as connecting points between those divided. Mr. Hi is identified as a cut point, or bottleneck in the data - a vertex which upon removal splits the network into subgraphs - this justified by the real-life division of the group occurring as individuals followed Mr. Hi to form a rival club after he was fired from the club (Zachary, W.W., 1977, p.454).
+
+```{r}
+summary(adj ~ esp(1:34))
+summary(adj ~ nsp(1:34))
+transitivity(karate, type = "global")
+edge_density(karate, loops = FALSE)
+gd <- sna::geodist(adj)
+max(gd$gdist[is.finite(gd$gdist)])
+all_shortest_paths(karate, from = 1, to = 34)$res
+cp <- sna::cutpoints(adj)
+rownames(adj)[cp]
+```
+
+To simulate the split of the group following Mr. Hi's dismissal, the data was split into two subgraphs made up of each faction. In real-life however, actor 9 defected from his original faction and into Mr. Hi's group following the split (ibid, p.464), consistent with their visualised close relationship with actor 3 despite membership of John A's faction. Mr. Hi's new group shows more triangles and higher transitivity scores than John A's, suggesting a greater degree of clustering and community closeness. This is further demonstrated by overall centrality scores which are higher in Mr. Hi's group for all centrality metrics apart from eigenvector - Mr. Hi's newly formed group appears to be more tightly connected than John A's. This supports Finifter's hypothesis about politically divided communities, whereby she proposes that politically deviant individuals tend to form friendships with each other more frequently than political conformers (1974) - opinions and actions which go against the norm, for example rebelling against their original instructor and group, brings individuals closely together in an act of collective insurgency.
+
+```{r}
+factions <- V(karate)$Faction
+faction1 <- induced_subgraph(karate, vids = V(karate)[Faction == 1])
+faction2 <- induced_subgraph(karate, vids = V(karate)[Faction == 2])
+adjfaction1 <- as.matrix(as_adjacency_matrix(faction1))
+adjfaction2 <- as.matrix(as_adjacency_matrix(faction2))
+vcount(faction1)
+vcount(faction2)
+summary(adjfaction1 ~ triangle)
+transitivity(faction1, type = "global")
+summary(adjfaction2 ~ triangle)
+transitivity(faction2, type = "global")
+sna::centralization(adjfaction1, FUN = sna:: degree)
+sna::centralization(adjfaction2, FUN = sna:: degree)
+sna::centralization(adjfaction1, FUN = sna:: betweenness)
+sna::centralization(adjfaction2, FUN = sna:: betweenness)
+sna::centralization(adjfaction1, FUN = sna:: closeness)
+sna::centralization(adjfaction2, FUN = sna:: closeness)
+sna::centralization(adjfaction1, FUN = sna:: evcent)
+sna::centralization(adjfaction2, FUN = sna:: evcent)
+```
+
+To conclude, this report has used network analysis to visualise the relationships between individuals within a politically divided group, using centrality measures to highlight relevant actors and bridges between groups, as well as transitivity and other metrics to assess clustering both within and between factions. This investigation has also evidenced existing political hypotheses in relationships between political deviants and conformers, using numeric calculations and data visualisation to bring a new understanding to ethnographic analysis.
+
+**Word count:** 962
+
+**Bibliography:**
+
+Finifter, A.W. (1974) ‘The Friendship Group as a Protective Environment for Political Deviants’, *American Political Science Review*, 68(2), pp. 607–625. <doi:10.2307/1959508>.
+
+Milgram, S. (1977) *The individual in a social world : essays and experiments*. London: Addison-Wesley.
+
+Zachary, W. W. (1977). ‘An information flow model for conflict and fission in small Groups’, *Journal of Anthropological Research*, 33(4), pp.452–473. Available at: <https://www.jstor.org/stable/3629752> (Accessed: 5 March 2026).
