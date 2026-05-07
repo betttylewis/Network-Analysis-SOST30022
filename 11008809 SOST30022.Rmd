@@ -1,0 +1,68 @@
+---
+title: "Investigating the Formation of Co-authorship Ties in the Berlin-Bradenburg
+  Political Science Network"
+author: "Betty Lewis"
+date: "2026-05-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+setwd("C://R_AST")
+getwd()
+load("berlin.RData")
+dim(authorship)
+coaut <- authorship %*% t(authorship)
+dim(coaut)
+seed <- 123
+coautbin <- (coaut > 0) * 1
+diag(coautbin) <- 0
+library(igraph)
+g <- graph_from_adjacency_matrix(coautbin, mode = "undirected", diag = FALSE)
+personstwo <- persons[!duplicated(persons$name), ]
+personstwo <- personstwo[1:227, ]
+personstwo$genderbin <- ifelse(personstwo$gender == "female", 1, 0)
+vertex_attr(g, "gender") <- personstwo$gender
+vertex_attr(g, "genderbin") <- personstwo$genderbin
+vertex_attr(g, "uni") <- personstwo$uni
+```
+
+INTRO 
+
+
+
+To investigate the formation of co-authorship ties in the Berlin-Bradenburg political science network, first descriptive analysis is conducted. The network is very sparse, with an overall density of 0.00495, suggesting that many individuals are disconnected or only connected to few others. The network is made up of 127 components, which further indicates disconnect between groups in the social network. Many authors may prefer to work alone, or where collaboration does occur this is within a small select cluster of authors. Shared partner analysis illuminates this clustering. 33 dyads share one mutual partner, 12 share 2, and 3 share 2, with no more pairs shared beyond this. There are 21 triangles within the network, along with edgewise shared partner analysis, this suggests a tendency for clustering and potential for further triadic closure in the network. This is confirmed by the global transitivity score of 0.2079. Clustered co-authorship relationships can be partially explained by those with complementary skills wanting to share workloads, this leading to the formation of shared partners between those already collaborating (Lefield, P., 2018, p.515). These groups are often made up of collaborators in similar disciplines connected by shared research problems and interpretations of these. Crane terms these 'invisible colleges', smaller networks between individuals cross-institutionally who may meet at conferences and events, building acquaintanceship to increase the likelihood of collaboration (1972, in Leifeld, p. et al., 2017). Invisible colleges are a structural feature, formed through edgewise shared partners which explain the formation of this co-authorship network.
+
+
+```{r global descriptive analysis, echo = FALSE, message = FALSE, warning = FALSE}
+graph.density(g)
+components(g)$no
+library(ergm)
+library(network)
+net <- as.network(coautbin, directed = FALSE)
+summary(net ~ esp(1:20))
+summary(net ~ triangle)
+detach("package:ergm", unload = TRUE)
+detach("package:network", unload = TRUE)
+transitivity(g, type = "global")
+```
+
+
+
+
+
+
+
+```{r homophily analysis, echo = FALSE, message = FALSE, warning = FALSE}
+mean(degree(g))
+degreevalues <- degree(g)
+degreedf <- data.frame(name = personstwo$name, degree = degreevalues, gender = personstwo$gender)
+top5degree <- degreedf[order(degreedf$degree, decreasing = TRUE), ][1:5, ]
+rownames(top5degree) <- NULL
+library(knitr)
+kable(top5degree, 
+      col.names = c("Author", "Degree", "Gender"),
+      caption = "5 most frequent coauthors by degree centrality")
+```
+
