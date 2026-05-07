@@ -48,9 +48,7 @@ detach("package:network", unload = TRUE)
 transitivity(g, type = "global")
 ```
 
-
-
-
+As well as invisible colleges, the presence of academic "stars" influence the collective research of a discipline, these being the most central researchers who connect clusters within the network (ibid). Moody (2004) posits that as well as shaping the progress of research disciplines, scientific stars 'attract a disproportionate level of research funding, high-profile appointments, and many students and collaborators' (p.214). Consequently, academic stars play an influential role in network structure. This is further investigated using degree centrality metrics. Global degree centrality is 1.1189, on average, individuals have only co-authored with one other individual. Below, a table of academic stars, those who have co-authored with a significantly above average number of individuals are displayed in a table. While 3 of these are men, only two are women. 
 
 
 
@@ -66,3 +64,45 @@ kable(top5degree,
       caption = "5 most frequent coauthors by degree centrality")
 ```
 
+Cole and Zuckerman (1984) posit that academia presents a 'productivity puzzle' whereby men outperform women by publication and citation counts (p.218). This is more modernly discussed by Aksnes (et al., 2011) who found that female Norwegian academics were also likely to publish fewer publications and be cited less than their male counterparts. Bosco (et al., 2024) broadens this scope, positing that Southern European journal publications are dominated by men, with the routes taken by men and women in publishing diverging with every career stage (p.299). 
+
+
+
+```{r}
+assortativity(g,V(g)$genderbin)
+#uni needs integer factors
+uniint <- as.integer(factor(V(g)$uni))
+assortativity_nominal(g, uniint, directed = FALSE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*
