@@ -3,7 +3,7 @@ title: "Investigating the Formation of Co-authorship Ties in the Berlin-Bradenbu
   Political Science Network"
 author: "11008809"
 date: "2026-05-07"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("C://R_AST")
 getwd()
 rm(list = ls())
+library(tinytex)
 load("berlin.RData")
 dim(authorship)
 coaut <- authorship %*% t(authorship)
@@ -95,15 +96,16 @@ To further investigate the presence of institutional homophily and the formation
 
 
 
-```{r network visualisation, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 14, fig.height = 9, fig.align = "center"}
+```{r network visualisation, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 7.5, fig.height = 5.5, fig.align = "center", out.width = "100%"}
 gconnect <- delete_vertices(g, which(igraph::degree(g) == 0))
 layout_fr <- layout_with_fr(gconnect)
 set.seed(123)
 uni_colours <- c("inst_berlin_fu" = "aquamarine", "inst_potsdam" = "red", "inst_viadrina" = "yellow",  
   "inst_berlin_hu" = "green", "inst_berlin_swp" = "magenta", "inst_berlin_hertie" = "orange", "inst_berlin_wzb" = "blue")  
 node_colours <- uni_colours[V(gconnect)$uni]
-layout(matrix(c(1, 2), nrow = 1), widths = c(4, 1.2))
-par(mar = c(1, 1, 4, 1))
+par(oma = c(0, 0, 2.5, 0)) 
+layout(matrix(c(1, 2), nrow = 1), widths = c(3.5, 1.5))
+par(mar = c(1, 0, 3, 0))
 plot(gconnect,
      vertex.color = node_colours,
      vertex.frame.color = "black",     
@@ -112,28 +114,31 @@ plot(gconnect,
      edge.width   = 0.4,
      edge.color   = "darkgrey",
      layout       = layout_fr,
-     main         = "Berlin-Brandenburg Political Science Co-authorship\nNetwork by Institution (2009-2013)")
-```
-
-```{r legend, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 6, fig.height = 2, fig.align = "left"}
-par(mar = c(0, 0, 0, 0))
+     main         = "")
+mtext("Berlin-Brandenburg Political Science Co-authorship",
+  side  = 3, line  = 1, outer = TRUE, cex   = 1, font  = 2)
+mtext("Network by Institution (2009-2013)",
+  side = 3, line = 0.2, outer = TRUE, cex = 1, font = 2)
+par(mar = c(1, 0, 3, 0))
 plot.new()
-legend("center",
-       inset   = c(-0.35, 0),                        
+legend(x = 0, y = 0.5,                        
        legend = c("Free University Berlin",
                   "University of Potsdam",
                   "European University Viadrina",
                   "Humboldt University of Berlin",
-                  "German Institue for International and Security Affairs",
+                  "German Institute for Int. and Security Affairs",
                   "Hertie School",
                   "WZB Berlin Social Science Center"),
        col    = c(uni_colours),
        pch    = 19,
        pt.cex = 1.3,
        bty    = "n",
-       cex    = 0.75,
+       cex    = 0.65,
        title  = expression(bold("Institution")),
-       title.adj = 0)
+       y.intersp = 1.1)
+layout(1)
+par(mar = c(5, 4, 4, 2), oma = c(0, 0, 0, 0))
+
 ```
 
 &nbsp;
@@ -193,7 +198,7 @@ mcmc.diagnostics(model3)
 
 &nbsp;
 
-Model fit was further assessed using goodness-of-fit statistics. These returned high p-values ≥ 0.90 for each model term, suggesting the model reproduces these very well. P-values for geodesic distances are also very high, aside from a drop at distances 9-11. The model successfully represents how close authors are to each other in the network, apart from at distances around 10 nodes. Goodness-of-fit for degree is more varied. The model reproduces high degree nodes very well, representing academic stars in the network, but is more inconsistent across degrees 10 and below. This is likely due to the omission of a structural term for degree centrality in the model after this degenerated the MCMC process. The model returns high p-values across edgewise shared partner goodness-of-fit statistics, suggesting it successfully models local clustering and the presence of invisible colleges across the network. There is a slight drop in p-values at 1 and 2 edgewise shared partners due to the high presence of these in the network.
+Model fit was further assessed using goodness-of-fit statistics. These returned high p-values of 0.90 or above for each model term, suggesting the model reproduces these very well. P-values for geodesic distances are also very high, aside from a drop at distances 9-11. The model successfully represents how close authors are to each other in the network, apart from at distances around 10 nodes. Goodness-of-fit for degree is more varied. The model reproduces high degree nodes very well, representing academic stars in the network, but is more inconsistent across degrees 10 and below. This is likely due to the omission of a structural term for degree centrality in the model after this degenerated the MCMC process. The model returns high p-values across edgewise shared partner goodness-of-fit statistics, suggesting it successfully models local clustering and the presence of invisible colleges across the network. There is a slight drop in p-values at 1 and 2 edgewise shared partners due to the high presence of these in the network.
 
 &nbsp;
 
