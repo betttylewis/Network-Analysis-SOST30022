@@ -19,18 +19,18 @@ dim(coaut)
 coautbin <- (coaut > 0) * 1
 diag(coautbin) <- 0
 library(igraph)
-g <- graph_from_adjacency_matrix(coautbin, mode = "undirected", diag = FALSE)
+desc <- graph_from_adjacency_matrix(coautbin, mode = "undirected", diag = FALSE)
 personstwo <- persons[!duplicated(persons$name), ]
 personstwo <- personstwo[1:227, ]
 personstwo$genderbin <- ifelse(personstwo$gender == "female", 1, 0)
-vertex_attr(g, "gender") <- personstwo$gender
-vertex_attr(g, "genderbin") <- personstwo$genderbin
-vertex_attr(g, "uni") <- personstwo$uni
+vertex_attr(desc, "gender") <- personstwo$gender
+vertex_attr(desc, "genderbin") <- personstwo$genderbin
+vertex_attr(desc, "uni") <- personstwo$uni
 ```
 
 &nbsp;
 
-This report uses network analysis to investigate the influence of structural clustering processes and attribute characteristics in the formation of co-authorship ties within the Berlin-Bradenburg political science network. The data used is a subset of the data collected by Leifeld (et al., 2017) across researchers present in German political science institutions between 2009 and 2013. While Leifeld (ibid) discusses the influential role of invisible colleges and academic stars in co-authorship networks, this report aims to investigate the role of these, and other structural or attribute features in the formation of co-authorship ties. This investigation will be employed through exploratory network statistics and visualisation, and the creation of a sequence of exponential random graph models of the network. Following research into the ‘publication gap’ in academia (Bosco, A., et al., 2024, p.289, I hypothesise that gender will play a significant role in network formation, where men are more likely to be present in co-authorship ties which also form based on homophily by gender.  
+This report uses network analysis to investigate the influence of structural clustering processes and attribute characteristics in the formation of co-authorship ties within the Berlin-Bradenburg political science network. The data used is a subset of the data collected by Leifeld (et al., 2017) of researchers within German political science institutions between 2009 and 2013. Following Leifeld's (et. al., 2017) findings, this report discusses the role of academic "stars" and invisible colleges, as well as other structural and attribute features, in the formation of co-authorship ties. This investigation will be employed through exploratory network statistics and visualisation, and the creation of a sequence of exponential random graph models. Following research into the publication gap in academia (Bosco, A., et al., 2024, p.289), this report investigates two hypotheses. First, that gender will play a significant role in network formation, where men are more likely to be present in co-authorship ties, and second, that homophily by gender will also play a significant role. 
 
 &nbsp;
 
@@ -38,78 +38,79 @@ This report uses network analysis to investigate the influence of structural clu
 
 &nbsp;
 
-To investigate the formation of co-authorship ties in the Berlin-Bradenburg political science network, exploratory descriptive analysis is conducted. With an overall density of 0.00495, the network is very sparse, with many isolates or minimally connected individuals. This is further evidenced through the presence of 127 components in the network, this indicating further disconnect between groups in the social network. Many authors may prefer to work alone, with collaboration occurring within a small select cluster of authors. The tendency for clustering is further highlighted by a global transitivity score of 0.2079 and the presence of 21 triangles in the network. This is further investigated through edgewise shared partner analysis. 33 dyads share one mutual partner, 12 share 2, and 2 share 3, with no more pairs shared beyond this. While some triangles are closed, there is a potential for further triadic closure. Clustered co-authorship relationships can be partially explained by those with complementary skills wanting to share workloads, this leading to the formation of shared partners between co-authors (Leifeld, P., 2018, p.515). These groups are often made up of collaborators in similar disciplines connected by shared research problems and interpretations of these. Crane terms these 'invisible colleges', smaller networks between individuals cross-institutionally. Researchers meet at conferences and events, building acquaintanceship to increase the likelihood of collaboration (1972, in Leifeld, p. et al., 2017). Invisible colleges are a structural feature which contribute to network structure through the formation of edgewise shared partners.
+Exploratory analysis highlights network structure and prominent factors in the formation of co-authorship ties. The network is sparse, with an overall density of 0.00495. This suggests the network has many minimally connected individuals, this evidenced by the presence of 104 isolates. Furthermore, the presence of 127 components indicates disconnect between groups - many authors may prefer to work alone, with collaboration occurring within a small select cluster of authors. The tendency for clustering is further highlighted by a global transitivity score of 0.2079 and the presence of 21 triangles in the network. This is investigated through edgewise shared partner analysis. 33 dyads share one mutual partner, 12 share 2, and 2 share 3, with no more pairs shared beyond this. While some triangles are closed, there is a potential for further triadic closure. Clustered co-authorship relationships can be partially explained by those with complementary skills wanting to share workloads, this leading to the formation of shared partners between co-authors (Leifeld, P., 2018, p.515). These groups are often made up of collaborators in similar disciplines connected by shared research problems and interpretations of these. Crane terms these smaller cross-institutional groups 'invisible colleges'. Researchers meet at conferences and events, building acquaintanceship to increase the likelihood of collaboration (1972, in Leifeld, p. et al., 2017). Invisible colleges are a structural feature which contribute to network structure through the formation of edgewise shared partners.
 
 &nbsp;
 
 ```{r global descriptive analysis, echo = FALSE, message = FALSE, warning = FALSE}
-graph.density(g)
-components(g)$no
+graph.density(desc)
+sum(degree(desc) == 0)
+components(desc)$no
+transitivity(desc, type = "global")
 library(ergm)
 library(network)
 net <- as.network(coautbin, directed = FALSE)
-summary(net ~ esp(1:20))
 summary(net ~ triangle)
+summary(net ~ esp(1:20))
 detach("package:ergm", unload = TRUE)
 detach("package:network", unload = TRUE)
-transitivity(g, type = "global")
 ```
 
 &nbsp;
 
-As well as invisible colleges, the presence of academic “stars” influence the collective research of a discipline, these being the most central researchers who connect clusters within the network (ibid). Moody (2004) posits that as well as shaping the progress of research disciplines, scientific stars attract more funding and collaborators (p.214). Consequently, academic stars play an influential role in network structure. This is further investigated using degree centrality metrics. While the network’s average degree is 1.1189, suggesting most individuals have only co-authored with one other, some academic stars stand out for their high degree centrality.
+In addition to invisible colleges, the research direction of the discipline is influenced by the presence of academic "stars". These are the most central researchers who connect clusters within the network (ibid), attracting more funding and collaborators (Moody, J., 2004, p.214). Consequently, academic stars play an influential role in co-authorship network structure. This is further investigated using degree centrality metrics. While the network’s average degree is 1.1189, suggesting most individuals have only co-authored with one other, some academic stars stand out for their high degree centrality.
 
 &nbsp;
 
 ```{r homophily analysis, echo = FALSE, message = FALSE, warning = FALSE}
-mean(degree(g))
-degreevalues <- degree(g)
+mean(degree(desc))
+degreevalues <- degree(desc)
 degreedf <- data.frame(name = personstwo$name, degree = degreevalues, gender = personstwo$gender)
 top5degree <- degreedf[order(degreedf$degree, decreasing = TRUE), ][1:5, ]
 rownames(top5degree) <- NULL
 library(knitr)
 kable(top5degree, 
       col.names = c("Author", "Degree", "Gender"),
-      caption = "5 most frequent coauthors by degree centrality")
+      caption = "5 Most Frequent Coauthors by Degree Centrality")
 ```
 
 &nbsp;
 
-Of the five individuals with the highest degree centrality score - the most prominent academic stars in the network - 3 are men and 2 are women. Cole and Zuckerman (1984) posit that academia presents a ‘productivity puzzle’ whereby men outperform women by publication and citation counts (p.218). This is more modernly discussed by Aksnes (et al., 2011) who found that female Norwegian academics were also likely to publish fewer publications and be cited less than their male counterparts. The publication gap is broadened by Bosco (et al., 2024) to the domination of men within journal applications across Southern Europe (p.299). Following exploratory, I extend this theory to the Berlin-Bradenburg region of Germany, hypothesising that there will be a significant difference in the presence of co-authorship ties by gender, with men featuring more frequently than women. 
+Of the five individuals with the highest degree centrality score - the most prominent academic stars in the network - 3 are men and 2 are women. Cole and Zuckerman (1984) posit that academia presents a ‘productivity puzzle’ whereby men outperform women by both publication and citation counts (p.218). This is more modernly discussed by Aksnes (et al., 2011) who found that female Norwegian academics were also likely to publish fewer publications and be cited less than their male counterparts. The publication gap is broadened by Bosco (et al., 2024) to the domination of men within journal applications across Southern Europe (p.299). Following exploratory analysis, this report extends this theory to the Berlin-Bradenburg region of Germany, hypothesising that there will be a significant difference in the presence of co-authorship ties by gender, with men featuring more frequently than women. 
 
-Another factor which explains the presence of co-author ties within the network is homophily. Within social networks, similarity breeds connection as individuals with shared characteristics form ties (McPherson, M., Smith-Lovin, L., & Cook, J.M., 2001). Lending to my second hypothesis that homophily by gender will play a significant role in network formation, where men are more likely to publish with each other and women similarly more likely to co-author in attempts to overcome the publication gap. An assortativity score for gender of 0.1348 supports a preference for individuals to co-author with someone of their own gender. However, with an even higher assortativity score of 0.5941, homophily by institution appears an important factor in network formation. Leifeld (2018) explains that researchers within the same institution will be more likely to publish together due to awareness of one another’s research, physical proximity, and collaboration between lecturers and post-doctorates (p.515).
+Another factor which explains the presence of co-author ties within the network is homophily. Within social networks, similarity breeds connection as individuals with shared characteristics form ties (McPherson, M., Smith-Lovin, L., & Cook, J.M., 2001). An assortativity score of 0.1348 for gender supports a preference for individuals to co-author with someone of their own gender. This report therefore also hypothesises that homophily by gender will play a significant role in network formation, where men are more likely to publish with each other and women more likely to co-author in attempts to overcome the publication gap. However, homophily by institution has an even higher assortativity score of 0.5941. Leifeld (2018) explains that researchers within the same institution will be more likely to publish together due to awareness of one another’s research, physical proximity, and collaboration between lecturers and post-doctorates (p.515).
 
 &nbsp;
 
 ```{r assortativity, echo = FALSE, message = FALSE, warning = FALSE}
-assortativity(g,V(g)$genderbin)
+assortativity(desc,V(desc)$genderbin)
 #uni needs integer factors
-uniint <- as.integer(factor(V(g)$uni))
-assortativity_nominal(g, uniint, directed = FALSE)
+uniint <- as.integer(factor(V(desc)$uni))
+assortativity_nominal(desc, uniint, directed = FALSE)
 ```
 
 &nbsp;
 
-To further investigate the presence of institutional homophily and the formation of co-authorship ties, the Berlin-Bradenburg political science network is visualised below. Given the sparsity of the network, isolates were removed prior to visualisation to illuminate patterns of clustering among researchers. Node size is proportional to degree centrality and nodes are coloured by institution. This illustrates strong inter-institutional clustering among individuals within Free University Berlin and the German Institute for International and Security Affairs, further evidencing the presence of institutional homophily in the network. Furthermore, clusters of research partners between institutions, as demonstrated in the top centre of the network, evidence the presence of invisible colleges where collaboration transcends institutional homophily.
+To further investigate the presence of institutional homophily and the formation of co-authorship ties, the Berlin-Bradenburg political science network is visualised below. Given the sparsity of the network, isolates were removed prior to visualisation to illuminate patterns of clustering among researchers. Node size is proportional to degree centrality and nodes are coloured by institution. This illustrates strong inter-institutional clustering among individuals within Free University Berlin and the German Institute for International and Security Affairs, further evidencing the presence of institutional homophily in the network. Furthermore, clusters of research partners between institutions, as demonstrated in the top centre of the network, evidence the presence of invisible colleges where collaboration transcends institutional homophily. These are connected by larger nodes, representing academic stars which connect a mix of universities in this hub of intra-institutional activity.
 
 &nbsp;
 
 
 
 ```{r network visualisation, echo = FALSE, message = FALSE, warning = FALSE, fig.width = 7.5, fig.height = 5.5, fig.align = "center", out.width = "100%"}
-gconnect <- delete_vertices(g, which(igraph::degree(g) == 0))
-layout_fr <- layout_with_fr(gconnect)
+descconnect <- delete_vertices(desc, which(igraph::degree(desc) == 0))
+layout_fr <- layout_with_fr(descconnect)
 set.seed(123)
 uni_colours <- c("inst_berlin_fu" = "aquamarine", "inst_potsdam" = "red", "inst_viadrina" = "yellow",  
   "inst_berlin_hu" = "green", "inst_berlin_swp" = "magenta", "inst_berlin_hertie" = "orange", "inst_berlin_wzb" = "blue")  
-node_colours <- uni_colours[V(gconnect)$uni]
+node_colours <- uni_colours[V(descconnect)$uni]
 par(oma = c(0, 0, 2.5, 0)) 
 layout(matrix(c(1, 2), nrow = 1), widths = c(3.5, 1.5))
 par(mar = c(1, 0, 3, 0))
-plot(gconnect,
+plot(descconnect,
      vertex.color = node_colours,
      vertex.frame.color = "black",     
-     vertex.size  = log1p(igraph::degree(gconnect)) * 4.5,  
+     vertex.size  = log1p(degree(descconnect)) * 4.5,  
      vertex.label = NA,
      edge.width   = 0.4,
      edge.color   = "darkgrey",
@@ -143,11 +144,12 @@ par(mar = c(5, 4, 4, 2), oma = c(0, 0, 0, 0))
 
 &nbsp;
 
+
 **Modelling the Network Using Exponential Random Graph Models (ERGMs)**
 
 &nbsp;
 
-Following descriptive analysis, a set of ERGMs were formulated to examin the formation of ties. Models contained a mixture of structural terms and demographic characteristics. Edges capture baseline density and were included in each model. A first model, including edges and geometrically weighted edgewise shared partners (GWESP) was initially formulated as a base. GWESP captures triadic closure, this providing statistical evidence for the presence of local clustering across invisible colleges evidenced in descriptive analysis. This term is geometrically weighted to down-weight rarer high shared partner counts, preventing model degeneracy. Given the sparsity of the network,  including a geometrically weighted degree statistic to model academic stars caused Markov Chain Monte Carlo (MCMC) to degenerate. This was therefore omitted from the model. Both remaining structural terms returned highly significant coefficients.
+Following descriptive analysis, a set of ERGMs were formulated to further examine significant factors in the formation of co-authorship ties. Models contained a mixture of structural terms and demographic characteristics. Edges capture baseline density and were included in each model. A first model, including edges and geometrically weighted edgewise shared partners (GWESP) was initially formulated as a base. GWESP captures triadic closure, this providing statistical evidence for the presence of local clustering across invisible colleges evidenced in descriptive analysis. This term is geometrically weighted to down-weight rarer high shared partner counts, preventing model degeneracy. Given the sparsity of the network,  including a geometrically weighted degree statistic to model academic stars caused Markov Chain Monte Carlo (MCMC) to degenerate. This was therefore omitted from the model. Both remaining structural terms returned highly significant coefficients.
 
 &nbsp;
 
@@ -176,7 +178,7 @@ summary(model2)
 
 Model terms for edges, GWESP, and institutional homophily all returned highly significant coefficients and are retained to produce a third model. Although model 3 returns a higher AIC than model 2, its lower BIC score makes it favoured in terms of model parsimony and the inclusion of only significant coefficients. Nevertheless, model 2 provides a competitive fit to model 3’s later-discussed goodness-of-fit statistics. Models perform similarly in all statistics while model 2 marginally outperforms model 3 in its representation of edgewise shared partners. While gender homophily and activity differences do not act as significant independent predictors in co-authorship ties, this does not imply that gender plays no broader structural role in co-authorship networks. Gao (et al., 2022, p.339) posit that despite being more under-represented in co-authorship networks, women do play important structural roles within them – it is not that women are under-represented as co-authors, but that they are under-represented in the network as a whole. To investigate terms which do produce significant coefficients, model 3 is selected, its coefficients exponentiated to form log odds.
 
-The exponentiated coefficient for edges is negligible (0.0016), this reinforcing the observed sparsity of the network. Without the presence of some other structural or common attribute, it is very unlikely for two nodes to form a connection. The exponentiated coefficients for GWESP and institutional homophily are 4.3025 and 4.7919. Holding all other variables constant, for each additional shared partner, the odds of a tie more than quadruple. This supports the presence of invisible colleges whereby clusters of advanced researchers from different institutions facilitate the diffusion of knowledge across otherwise disconnected parts of the network (Crane, 1972, in Lefield, P. et al., 2017). Similarly, holding all other variables constant, those within the same institution are almost 5 times more likely to co-author with each other than with those in other institutions. This suggests that collaboration appears strongly associated with geographic proximity and the role of departmental relationships in forming co-authorships. While institutional homophily plays a slightly larger role in network structure, the large, significant coefficients for both terms suggest that invisible colleges and institutional homophily operate simultaneously in the formation of co-authorship ties. Leifeld (et al., 2017) contends that the German political science network is dominated by ‘a small set of well-connected universities taking leading roles in these informal research groups’ - co-authored publications are published both within and between these universities, ties forming simultaneously due to institutional homophily, and regional and disciplinary homophily found in invisible college clusters.
+The exponentiated coefficient for edges is negligible (0.0016), this reinforcing the observed sparsity of the network. Without the presence of another structural factor or common attribute, it is very unlikely for two nodes to form a connection. The exponentiated coefficients for GWESP and institutional homophily are 4.3025 and 4.7919. Holding all other variables constant, for each additional shared partner, the odds of a tie more than quadruple. This supports the presence of invisible colleges whereby clusters of advanced researchers from different institutions facilitate the diffusion of knowledge across otherwise disconnected parts of the network (Crane, 1972, in Lefield, P. et al., 2017). Similarly, holding all other variables constant, those within the same institution are almost 5 times more likely to co-author with each other than with those in other institutions. This suggests that collaboration appears strongly associated with geographic proximity and the role of departmental relationships in forming co-authorships. While institutional homophily plays a slightly larger role in network structure, the large, significant coefficients for both terms suggest that invisible colleges and institutional homophily operate simultaneously in the formation of co-authorship ties. Leifeld (et al., 2017) contend that the German political science network is dominated by ‘a small set of well-connected universities taking leading roles in these informal research groups’ - co-authored publications are published both within and between these universities, ties forming simultaneously due to institutional homophily, and regional and disciplinary homophily found in invisible college clusters.
 
 &nbsp;
 
@@ -198,7 +200,7 @@ mcmc.diagnostics(model3)
 
 &nbsp;
 
-Model fit was further assessed using goodness-of-fit statistics. These returned high p-values of 0.90 or above for each model term, suggesting the model reproduces these very well. P-values for geodesic distances are also very high, aside from a drop at distances 9-11. The model successfully represents how close authors are to each other in the network, apart from at distances around 10 nodes. Goodness-of-fit for degree is more varied. The model reproduces high degree nodes very well, representing academic stars in the network, but is more inconsistent across degrees 10 and below. This is likely due to the omission of a structural term for degree centrality in the model after this degenerated the MCMC process. The model returns high p-values across edgewise shared partner goodness-of-fit statistics, suggesting it successfully models local clustering and the presence of invisible colleges across the network. There is a slight drop in p-values at 1 and 2 edgewise shared partners due to the high presence of these in the network.
+Model fit was further assessed using goodness-of-fit statistics. These returned high p-values of 0.90 or above for each model term, suggesting the model reproduces these very well. P-values for geodesic distances are also very high, aside from a drop at distances 9-11. The model successfully represents how close authors are to each other in the network, apart from at distances around 10 nodes. Goodness-of-fit for degree is more varied. The model reproduces high degree nodes representing academic stars very well, but is more inconsistent across degrees 10 and below. This is likely due to the omission of a structural term for degree centrality in the model after this degenerated the MCMC process. The model returns high p-values across edgewise shared partner goodness-of-fit statistics, suggesting it successfully models local clustering and the presence of invisible colleges across the network. There is a slight drop in p-values at 1 and 2 edgewise shared partners, reflecting greater variance in network simulation where observed shared partners are most concentrated. 
 
 &nbsp;
 
@@ -207,10 +209,13 @@ gof(model3)
 ```
 &nbsp;
 
-To conclude, this report has investigated the formation of co-authorship ties within the Berlin-Bradenburg political science network. While we fail to reject the null hypotheses that co-authorship ties aren’t formed by gender homophily or dominated by the increased presence of one gender over another, significance is found in the simultaneous presence of invisible colleges and institutional homophily in the network. Further research could be done into modelling the presence of academic stars without degeneration and investigating further structural and attribute features present in the network. To extend the scope of the findings, future data collection in the collaboration patterns of Berlin-Bradenburg institutions outside of this region would be highly beneficial. While Lefield (et al., 2017) contend that the German political science network is dominated by a few well-connected universities, Wagner (2008) posits that invisible colleges have diversified, with globalisation creating international information flows that transcend geographical proximity. Rechavi (et al., 2024) emphasise the importance of this for overcoming Western-centric research communities that lack cross-cultural understandings (p.74). With further data collection, network analysis helps to illuminate how invisible colleges shape collaboration both within and beyond the Berlin-Bradenburg network, allowing for targeted interventions into broadening future co-authorship networks.
+To conclude, this report has investigated the formation of co-authorship ties within the Berlin-Bradenburg political science network. While we fail to reject the null hypotheses that co-authorship ties aren’t formed by gender homophily or dominated by the increased presence of one gender over another, significance is found in the simultaneous presence of invisible colleges and institutional homophily in the network. Further research could be done into successfully modelling the influence of academic stars without degeneration and investigating further structural and attribute features present in the network. To extend the scope of the findings, future data collection in the collaboration patterns of Berlin-Bradenburg institutions outside of this region would be highly beneficial. While Lefield (et al., 2017) contend that the German political science network is dominated by a few well-connected universities, Wagner (2008) posits that invisible colleges have diversified, with globalisation creating international information flows that transcend geographical proximity. Rechavi (et al., 2024) emphasise the importance of this for overcoming Western-centric research communities that lack cross-cultural understandings (p.74). With further data collection, network analysis illuminates how invisible colleges shape collaboration both within and beyond the Berlin-Bradenburg network, allowing for targeted interventions into broadening future co-authorship networks.
 
 &nbsp;
 
+**Word Count: 1937** 
+
+&nbsp;
 
 **Bibliography**
 
